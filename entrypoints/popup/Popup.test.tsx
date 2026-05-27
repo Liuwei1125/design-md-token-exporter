@@ -53,7 +53,7 @@ describe('Popup', () => {
 
     expect(host.textContent).toContain('Design.md Token Exporter');
     expect(host.textContent).toContain('Ready for local extraction');
-    expect(host.textContent).toContain('v0.1');
+    expect(host.textContent).toContain('v0.1.0');
     expect(host.textContent).toContain('Analyze');
     expect(host.textContent).toContain('Panel');
     expect(host.textContent).toContain('Copy');

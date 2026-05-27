@@ -1,8 +1,9 @@
-import { Braces, Copy, PanelRightOpen, ScanLine } from 'lucide-react';
+import { Copy, PanelRightOpen, ScanLine } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { normalizeColor } from '../../src/core/color-normalization';
 import type { DesignSnapshot } from '../../src/analyzer/types';
 import { generateDesignMd } from '../../src/export/generators';
+import { APP_GITHUB_URL, APP_NAME, APP_VERSION } from '../../src/app-meta';
 import {
   ANALYZE_CURRENT_PAGE,
   LAST_SNAPSHOT_STORAGE_KEY,
@@ -130,12 +131,10 @@ export function Popup() {
   return (
     <main className="w-[360px] bg-slate-50/90 p-4 text-slate-900 antialiased selection:bg-blue-100">
       <header className="flex items-center justify-between gap-3 border-b border-slate-200/60 pb-3">
-        <div className="flex min-w-0 items-center gap-2.5">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-blue-200 bg-blue-50/80 text-blue-600 shadow-sm">
-            <Braces aria-hidden="true" size={18} />
-          </div>
+        <div className="flex min-w-0 items-center gap-3">
+          <img className="h-12 w-12 shrink-0 rounded-xl shadow-sm" src="/icon/icon-128.png" alt="" />
           <div className="min-w-0">
-            <h1 className="truncate text-sm font-semibold tracking-tight text-slate-900">Design.md Token Exporter</h1>
+            <h1 className="truncate text-sm font-semibold tracking-tight text-slate-900">{APP_NAME}</h1>
             <div className="mt-0.5 flex min-w-0 items-center gap-1.5">
               <span className="relative flex h-2 w-2 shrink-0">
                 {isAnalyzing ? (
@@ -161,13 +160,13 @@ export function Popup() {
 
         <a
           className="inline-flex shrink-0 items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900"
-          href="https://github.com/liuwei53/design-md-token-exporter"
+          href={APP_GITHUB_URL}
           rel="noreferrer"
           target="_blank"
           title="Open GitHub repository"
         >
           <GithubIcon className="shrink-0" />
-          v0.1
+          v{APP_VERSION}
         </a>
       </header>
 

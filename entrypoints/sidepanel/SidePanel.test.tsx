@@ -760,5 +760,218 @@ describe('SidePanel', () => {
       document.body.removeChild(host);
     }
   });
+
+  it('renders PermissionWarningCard when snapshot is null and a permission error occurs', async () => {
+    const originalSendMessage = chrome.runtime.sendMessage;
+    chrome.runtime.sendMessage = vi.fn().mockImplementation(async () => {
+      return {
+        ok: false,
+        error: 'Cannot access contents of the page. Extension manifest must request permission to access...',
+      };
+    });
+
+    const host = document.createElement('div');
+    document.body.append(host);
+
+    await act(async () => {
+      createRoot(host).render(<SidePanel />);
+    });
+
+    expect(host.textContent).toContain('Ready for local extraction');
+    expect(host.querySelector('[data-testid="permission-warning-card"]')).toBeFalsy();
+
+    const analyzeButton = host.querySelector('button[aria-label="Analyze current page"]');
+    expect(analyzeButton).toBeTruthy();
+
+    await act(async () => {
+      analyzeButton!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(host.querySelector('[data-testid="permission-warning-card"]')).toBeTruthy();
+    expect(host.textContent).toContain('Authorization required');
+    expect(host.textContent).toContain('Click the extension icon');
+
+    chrome.runtime.sendMessage = originalSendMessage;
+    document.body.removeChild(host);
+  });
+
+  it('shows "Refresh analysis" on the button and fixed-width styling when history snapshot is loaded', async () => {
+    storedValues.lastSnapshot = storedSnapshot;
+
+    const host = document.createElement('div');
+    document.body.append(host);
+
+    await act(async () => {
+      createRoot(host).render(<SidePanel />);
+    });
+
+    const analyzeButton = host.querySelector('button[aria-label="Analyze current page"]');
+    expect(analyzeButton).toBeTruthy();
+    expect(analyzeButton?.textContent).toContain('Refresh analysis');
+    expect(analyzeButton?.className).toContain('w-40');
+    expect(analyzeButton?.className).toContain('min-w-[160px]');
+
+    document.body.removeChild(host);
+  });
+
+  it('renders ProtectedPageWarningCard when snapshot is null and a protected page error occurs', async () => {
+    const originalSendMessage = chrome.runtime.sendMessage;
+    chrome.runtime.sendMessage = vi.fn().mockImplementation(async () => {
+      return {
+        ok: false,
+        error: 'chrome://protected-page cannot be accessed',
+      };
+    });
+
+    const host = document.createElement('div');
+    document.body.append(host);
+
+    await act(async () => {
+      createRoot(host).render(<SidePanel />);
+    });
+
+    const analyzeButton = host.querySelector('button[aria-label="Analyze current page"]');
+    expect(analyzeButton).toBeTruthy();
+
+    await act(async () => {
+      analyzeButton!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(host.querySelector('[data-testid="protected-warning-card"]')).toBeTruthy();
+    expect(host.textContent).toContain('Page cannot be analyzed');
+    expect(host.textContent).toContain('Chrome blocks extensions on protected pages');
+    expect(host.textContent).not.toContain('Click the extension icon');
+
+    chrome.runtime.sendMessage = originalSendMessage;
+    document.body.removeChild(host);
+  });
+
+  it('keeps stable status and displays inline warning notice when history exists and a permission error occurs', async () => {
+    storedValues.lastSnapshot = storedSnapshot;
+    const originalSendMessage = chrome.runtime.sendMessage;
+    chrome.runtime.sendMessage = vi.fn().mockImplementation(async () => {
+      return {
+        ok: false,
+        error: 'Cannot access contents of the page. Extension manifest must request permission to access...',
+      };
+    });
+
+    const host = document.createElement('div');
+    document.body.append(host);
+
+    await act(async () => {
+      createRoot(host).render(<SidePanel />);
+    });
+
+    const overviewTab = Array.from(host.querySelectorAll('button')).find((button) => button.textContent?.includes('Overview'));
+    expect(overviewTab).toBeTruthy();
+
+    await act(async () => {
+      overviewTab?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    // Before clicking, it should show stable status based on storedSnapshot
+    expect(host.textContent).toContain('Last analyzed: example.com');
+
+    const analyzeButton = host.querySelector('button[aria-label="Analyze current page"]');
+    expect(analyzeButton).toBeTruthy();
+
+    await act(async () => {
+      analyzeButton!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    // After clicking and failing, status MUST still be stable
+    expect(host.textContent).toContain('Last analyzed: example.com');
+
+    // Content area must NOT render the full page warning card (it should show the overview snapshot data instead)
+    expect(host.querySelector('[data-testid="permission-warning-card"]')).toBeFalsy();
+    expect(host.textContent).toContain('Confidence'); // Key Token overview indicator
+
+    // An inline notice must be displayed in the header right below the button
+    const inlineNotice = host.querySelector('[data-testid="inline-permission-notice"]');
+    expect(inlineNotice).toBeTruthy();
+    expect(inlineNotice?.textContent).toContain('Chrome needs a toolbar click before this extension can read the current tab');
+
+    chrome.runtime.sendMessage = originalSendMessage;
+    document.body.removeChild(host);
+  });
+
+  it('renders GenericErrorWarningCard when snapshot is null and a generic failure occurs', async () => {
+    const originalSendMessage = chrome.runtime.sendMessage;
+    chrome.runtime.sendMessage = vi.fn().mockImplementation(async () => {
+      return {
+        ok: false,
+        error: 'Some weird network timeout or arbitrary page crash',
+      };
+    });
+
+    const host = document.createElement('div');
+    document.body.append(host);
+
+    await act(async () => {
+      createRoot(host).render(<SidePanel />);
+    });
+
+    const analyzeButton = host.querySelector('button[aria-label="Analyze current page"]');
+    expect(analyzeButton).toBeTruthy();
+
+    await act(async () => {
+      analyzeButton!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(host.querySelector('[data-testid="other-warning-card"]')).toBeTruthy();
+    expect(host.querySelector('[data-testid="permission-warning-card"]')).toBeFalsy();
+    expect(host.textContent).toContain('Analysis failed');
+    expect(host.textContent).toContain('An unexpected error occurred during page analysis');
+
+    chrome.runtime.sendMessage = originalSendMessage;
+    document.body.removeChild(host);
+  });
+
+  it('keeps stable status and displays inline generic notice when history exists and a generic failure occurs', async () => {
+    storedValues.lastSnapshot = storedSnapshot;
+    const originalSendMessage = chrome.runtime.sendMessage;
+    chrome.runtime.sendMessage = vi.fn().mockImplementation(async () => {
+      return {
+        ok: false,
+        error: 'Arbitrary backend/script injection failed',
+      };
+    });
+
+    const host = document.createElement('div');
+    document.body.append(host);
+
+    await act(async () => {
+      createRoot(host).render(<SidePanel />);
+    });
+
+    const overviewTab = Array.from(host.querySelectorAll('button')).find((button) => button.textContent?.includes('Overview'));
+    expect(overviewTab).toBeTruthy();
+
+    await act(async () => {
+      overviewTab?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    const analyzeButton = host.querySelector('button[aria-label="Analyze current page"]');
+    expect(analyzeButton).toBeTruthy();
+
+    await act(async () => {
+      analyzeButton!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    // Stable status retained
+    expect(host.textContent).toContain('Last analyzed: example.com');
+
+    // Overview data still visible
+    expect(host.textContent).toContain('Confidence');
+
+    // Inline generic warning notice is displayed below the button
+    const inlineNotice = host.querySelector('[data-testid="inline-other-notice"]');
+    expect(inlineNotice).toBeTruthy();
+    expect(inlineNotice?.textContent).toContain('An unexpected error occurred during page analysis. Please try again.');
+
+    chrome.runtime.sendMessage = originalSendMessage;
+    document.body.removeChild(host);
+  });
 });
 

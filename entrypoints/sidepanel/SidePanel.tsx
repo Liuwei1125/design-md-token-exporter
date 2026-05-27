@@ -1,4 +1,4 @@
-import { ClipboardList, Layers3, PackageOpen, ScanLine, Settings } from 'lucide-react';
+import { ClipboardList, Layers3, PackageOpen, ScanLine, Settings, AlertCircle, Lock } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { normalizeColor } from '../../src/core/color-normalization';
 import {
@@ -68,6 +68,7 @@ export function SidePanel() {
   const [status, setStatus] = useState('Ready for local extraction');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [analysisError, setAnalysisError] = useState<'permission' | 'protected' | 'other' | null>(null);
   const selectedTab = tabs.find((tab) => tab.id === activeSidePanelTab) ?? tabs[0];
   const selectedTabId = selectedTab.id;
 
@@ -80,9 +81,40 @@ export function SidePanel() {
     });
   }, [loadPersistedState, loadSettings]);
 
+  function classifyError(errorMsg: string) {
+    const snapshot = useDesignStore.getState().correctedSnapshot;
+    if (snapshot) {
+      setStatus(`Last analyzed: ${snapshot.meta.hostname || snapshot.meta.title || 'current page'}`);
+    } else {
+      setStatus('Ready for local extraction');
+    }
+
+    if (
+      errorMsg.includes('chrome://') ||
+      errorMsg.includes('chrome-extension://') ||
+      errorMsg.includes('chrome.google.com') ||
+      errorMsg.includes('chromewebstore') ||
+      errorMsg.includes('Web Store') ||
+      errorMsg.includes('protected')
+    ) {
+      setAnalysisError('protected');
+    } else if (
+      errorMsg.includes('Cannot access') ||
+      errorMsg.includes('manifest must request') ||
+      errorMsg.includes('No active tab') ||
+      errorMsg.includes('permission') ||
+      errorMsg.includes('Failed to execute')
+    ) {
+      setAnalysisError('permission');
+    } else {
+      setAnalysisError('other');
+    }
+  }
+
   async function analyzePage() {
     setIsAnalyzing(true);
     setStatus('Analyzing current page...');
+    setAnalysisError(null);
 
     try {
       const response = (await chrome.runtime.sendMessage({
@@ -92,13 +124,14 @@ export function SidePanel() {
       if (response?.ok) {
         await setSnapshot(response.snapshot);
         setActiveSidePanelTab('overview');
-        setStatus(`Analyzed ${response.snapshot.meta.hostname || 'current page'}`);
+        setStatus(`Last analyzed: ${response.snapshot.meta.hostname || 'current page'}`);
+        setAnalysisError(null);
         return;
       }
 
-      setStatus(response?.error ?? 'Analysis failed');
+      classifyError(response?.error ?? 'Analysis failed');
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : 'Analysis failed');
+      classifyError(error instanceof Error ? error.message : 'Analysis failed');
     } finally {
       setIsAnalyzing(false);
     }
@@ -140,14 +173,39 @@ export function SidePanel() {
         </p>
         <button
           type="button"
-          className="mt-3.5 inline-flex h-9 items-center justify-center gap-1.5 rounded-lg px-3.5 text-xs font-bold text-white shadow-sm transition-all duration-200 hover:brightness-105 active:scale-95 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:opacity-75 disabled:active:scale-100"
+          aria-label="Analyze current page"
+          className="mt-3.5 inline-flex h-9 w-40 min-w-[160px] items-center justify-center gap-1.5 rounded-lg px-3.5 text-xs font-bold text-white shadow-sm transition-all duration-200 hover:brightness-105 active:scale-95 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:opacity-75 disabled:active:scale-100"
           style={{ backgroundColor: 'var(--dynamic-primary)' }}
           onClick={analyzePage}
           disabled={isAnalyzing}
         >
           <ScanLine aria-hidden="true" size={14} className={isAnalyzing ? 'animate-spin' : ''} />
-          <span>{isAnalyzing ? 'Analyzing...' : 'Analyze Current Page'}</span>
+          <span>
+            {isAnalyzing
+              ? 'Analyzing...'
+              : correctedSnapshot !== null
+              ? 'Refresh analysis'
+              : 'Analyze current page'}
+          </span>
         </button>
+        {analysisError === 'permission' && correctedSnapshot !== null && (
+          <div className="mt-3 p-3 rounded-lg border border-amber-200 bg-amber-50/80 text-[11px] text-amber-800 leading-relaxed font-semibold shadow-2xs flex items-start gap-2" data-testid="inline-permission-notice">
+            <Lock className="h-3.5 w-3.5 shrink-0 mt-0.5 text-amber-600" aria-hidden="true" />
+            <span>Chrome needs a toolbar click before this extension can read the current tab. Click the extension icon, run Analyze there, then continue in the side panel.</span>
+          </div>
+        )}
+        {analysisError === 'protected' && correctedSnapshot !== null && (
+          <div className="mt-3 p-3 rounded-lg border border-slate-200 bg-slate-50/80 text-[11px] text-slate-600 leading-relaxed font-semibold shadow-2xs flex items-start gap-2" data-testid="inline-protected-notice">
+            <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-slate-500" aria-hidden="true" />
+            <span>Chrome blocks extensions on protected pages such as chrome:// URLs and the Chrome Web Store.</span>
+          </div>
+        )}
+        {analysisError === 'other' && correctedSnapshot !== null && (
+          <div className="mt-3 p-3 rounded-lg border border-red-200 bg-red-50/80 text-[11px] text-red-800 leading-relaxed font-semibold shadow-2xs flex items-start gap-2" data-testid="inline-other-notice">
+            <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-red-500" aria-hidden="true" />
+            <span>An unexpected error occurred during page analysis. Please try again.</span>
+          </div>
+        )}
       </header>
 
       <nav className="grid grid-cols-3 border-b border-slate-200 bg-white px-1 shadow-2xs flex-shrink-0" aria-label="Side panel tabs">
@@ -176,25 +234,37 @@ export function SidePanel() {
       </nav>
 
       <section className="flex-1 overflow-y-auto p-4 transition-all duration-300 scrollbar-thin">
-        {selectedTabId === 'overview' ? (
-          <OverviewTab snapshot={correctedSnapshot} emptyState={selectedTab.emptyState} />
-        ) : null}
+        {correctedSnapshot === null && analysisError !== null ? (
+          analysisError === 'protected' ? (
+            <ProtectedPageWarningCard />
+          ) : analysisError === 'permission' ? (
+            <PermissionWarningCard />
+          ) : (
+            <GenericErrorWarningCard />
+          )
+        ) : (
+          <>
+            {selectedTabId === 'overview' ? (
+              <OverviewTab snapshot={correctedSnapshot} emptyState={selectedTab.emptyState} />
+            ) : null}
 
-        {selectedTabId === 'tokens' ? (
-          <TokensTab
-            snapshot={correctedSnapshot}
-            userCorrections={userCorrections}
-            editingEnabled={settings.tokens.editingEnabled}
-            emptyState={selectedTab.emptyState}
-            onColorChange={(role, value) => void setColorCorrection(role, value)}
-            onFontFamilyChange={(value) => void setUserCorrection('fontFamily', value)}
-            onRadiusChange={(scaleName, value) => void setRadiusCorrection(scaleName, value)}
-            onSpacingChange={(scaleName, value) => void setSpacingCorrection(scaleName, value)}
-            onIgnoreToken={(kind, value) => void ignoreTokenValue(kind, value)}
-          />
-        ) : null}
+            {selectedTabId === 'tokens' ? (
+              <TokensTab
+                snapshot={correctedSnapshot}
+                userCorrections={userCorrections}
+                editingEnabled={settings.tokens.editingEnabled}
+                emptyState={selectedTab.emptyState}
+                onColorChange={(role, value) => void setColorCorrection(role, value)}
+                onFontFamilyChange={(value) => void setUserCorrection('fontFamily', value)}
+                onRadiusChange={(scaleName, value) => void setRadiusCorrection(scaleName, value)}
+                onSpacingChange={(scaleName, value) => void setSpacingCorrection(scaleName, value)}
+                onIgnoreToken={(kind, value) => void ignoreTokenValue(kind, value)}
+              />
+            ) : null}
 
-        {selectedTabId === 'export' ? <ExportTab snapshot={correctedSnapshot} emptyState={selectedTab.emptyState} /> : null}
+            {selectedTabId === 'export' ? <ExportTab snapshot={correctedSnapshot} emptyState={selectedTab.emptyState} /> : null}
+          </>
+        )}
       </section>
 
       {/* Settings Drawer Overlay */}
@@ -334,4 +404,52 @@ function hueToRgbChannel(p: number, q: number, t: number): number {
   if (localT < 1 / 2) return q;
   if (localT < 2 / 3) return p + (q - p) * (2 / 3 - localT) * 6;
   return p;
+}
+
+function PermissionWarningCard() {
+  return (
+    <div className="rounded-2xl border border-amber-200 bg-amber-50/50 p-5 shadow-2xs antialiased leading-relaxed" data-testid="permission-warning-card">
+      <div className="flex items-start gap-3">
+        <Lock className="h-4 w-4 shrink-0 mt-0.5 text-amber-600" aria-hidden="true" />
+        <div className="min-w-0 flex-1">
+          <h3 className="text-sm font-bold text-amber-900 tracking-tight">Authorization required</h3>
+          <p className="mt-2 text-xs text-amber-800 font-semibold leading-relaxed">
+            Chrome needs a toolbar click before this extension can read the current tab. Click the extension icon, run Analyze there, then continue in the side panel.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ProtectedPageWarningCard() {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-slate-50/50 p-5 shadow-2xs antialiased leading-relaxed" data-testid="protected-warning-card">
+      <div className="flex items-start gap-3">
+        <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-slate-500" aria-hidden="true" />
+        <div className="min-w-0 flex-1">
+          <h3 className="text-sm font-bold text-slate-800 tracking-tight">Page cannot be analyzed</h3>
+          <p className="mt-2 text-xs text-slate-600 font-semibold leading-relaxed">
+            Chrome blocks extensions on protected pages such as chrome:// URLs and the Chrome Web Store.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function GenericErrorWarningCard() {
+  return (
+    <div className="rounded-2xl border border-red-200 bg-red-50/50 p-5 shadow-2xs antialiased leading-relaxed" data-testid="other-warning-card">
+      <div className="flex items-start gap-3">
+        <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-red-500" aria-hidden="true" />
+        <div className="min-w-0 flex-1">
+          <h3 className="text-sm font-bold text-red-900 tracking-tight">Analysis failed</h3>
+          <p className="mt-2 text-xs text-red-800 font-semibold leading-relaxed">
+            An unexpected error occurred during page analysis. Please try refreshing the tab or analyzing another page.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 }

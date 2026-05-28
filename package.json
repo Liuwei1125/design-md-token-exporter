@@ -4,6 +4,7 @@
   "private": false,
   "description": "Local-first Chrome extension for extracting design tokens and exporting DESIGN.md artifacts.",
   "license": "MIT",
+  "packageManager": "pnpm@10.27.0",
   "type": "module",
   "scripts": {
     "dev": "wxt",
@@ -34,5 +35,11 @@
     "tailwindcss": "latest",
     "typescript": "latest",
     "vitest": "latest"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "spawn-sync"
+    ]
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "design-md-token-exporter",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": false,
   "description": "Local-first Chrome extension for extracting design tokens and exporting DESIGN.md artifacts.",
   "license": "MIT",
@@ -13,7 +13,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "release:check": "pnpm typecheck && pnpm test && pnpm build",
-    "release:zip": "pnpm build && rm -f .output/design-md-token-exporter-0.1.0-chrome-mv3.zip && cd .output/chrome-mv3 && zip -qr ../design-md-token-exporter-0.1.0-chrome-mv3.zip ."
+    "release:zip": "pnpm build && rm -f .output/design-md-token-exporter-0.1.1-chrome-mv3.zip && cd .output/chrome-mv3 && zip -qr ../design-md-token-exporter-0.1.1-chrome-mv3.zip ."
   },
   "dependencies": {
     "lucide-react": "latest",

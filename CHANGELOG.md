@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.1.1 - 2026-05-28
+
+### Changed
+
+- Improved Side Panel analysis feedback for Chrome `activeTab` permission boundaries.
+- Preserved previous analysis results when a refresh fails.
+- Stabilized the analysis button label width to avoid layout jumps.
+
+### Added
+
+- Added Chrome Web Store screenshots and promotional images for publication.
+
 ## 0.1.0 - 2026-05-27
 
 ### Added

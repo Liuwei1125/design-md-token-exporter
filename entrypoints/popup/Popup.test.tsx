@@ -2,6 +2,7 @@ import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { DesignSnapshot } from '../../src/analyzer/types';
+import { APP_VERSION } from '../../src/app-meta';
 import { LAST_SNAPSHOT_STORAGE_KEY, USER_CORRECTIONS_STORAGE_KEY } from '../../src/messages';
 import { Popup } from './Popup';
 
@@ -53,7 +54,7 @@ describe('Popup', () => {
 
     expect(host.textContent).toContain('Design.md Token Exporter');
     expect(host.textContent).toContain('Ready for local extraction');
-    expect(host.textContent).toContain('v0.1.0');
+    expect(host.textContent).toContain(`v${APP_VERSION}`);
     expect(host.textContent).toContain('Analyze');
     expect(host.textContent).toContain('Panel');
     expect(host.textContent).toContain('Copy');

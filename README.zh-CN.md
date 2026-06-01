@@ -7,15 +7,34 @@
 </p>
 
 <p align="center">
-  <img alt="版本 0.1.0" src="https://img.shields.io/badge/version-0.1.0-dc2626?style=for-the-badge">
+  <img alt="版本 0.1.1" src="https://img.shields.io/badge/version-0.1.1-dc2626?style=for-the-badge">
   <img alt="测试通过" src="https://img.shields.io/badge/tests-passing-22c55e?style=for-the-badge">
   <img alt="MIT 许可证" src="https://img.shields.io/badge/license-MIT-0ea5e9?style=for-the-badge">
   <img alt="Manifest V3" src="https://img.shields.io/badge/manifest-MV3-475569?style=for-the-badge">
+  <a href="https://chromewebstore.google.com/detail/designmd-token-exporter/jkeicmodgpdpakcoafcppfhdbeppgnaj">
+    <img alt="Chrome Web Store" src="https://img.shields.io/badge/Chrome%20Web%20Store-%E5%B7%B2%E5%8F%91%E5%B8%83-2563eb?style=for-the-badge">
+  </a>
 </p>
+
+<p align="center">
+  <a href="https://chromewebstore.google.com/detail/designmd-token-exporter/jkeicmodgpdpakcoafcppfhdbeppgnaj"><strong>从 Chrome Web Store 安装</strong></a>
+</p>
+
+![Design.md Token Exporter](store-assets/chrome-store/promo/marquee-1400x560.png)
 
 一个本地优先的 Chrome 扩展：从当前网页提取设计 token，并导出适合 AI 编程和前端实现使用的设计物料。
 
 Design.md Token Exporter 只会在用户明确点击分析后读取当前标签页。分析结果保存在浏览器本地，可导出 `DESIGN.md`、CSS Variables、Tailwind Config 片段和 `tokens.json`。
+
+## 截图
+
+![分析当前页面](store-assets/chrome-store/screenshots/01-analyze-current-page.png)
+
+![总览工作区](store-assets/chrome-store/screenshots/02-overview-workbench.png)
+
+![Token 面板](store-assets/chrome-store/screenshots/03-token-palette.png)
+
+![导出 DESIGN.md](store-assets/chrome-store/screenshots/04-export-design-md.png)
 
 ## 功能
 
@@ -50,7 +69,7 @@ MVP 是本地优先设计：
 - `storage`：保存最近一次本地分析结果、用户修正和工作区偏好。
 - `sidePanel`：提供主要的查看、修正和导出工作区。
 
-隐私声明草稿见 [docs/publish/privacy-statement.md](docs/publish/privacy-statement.md)。
+隐私声明见 [docs/publish/privacy-statement.md](docs/publish/privacy-statement.md)。
 
 ## 本地开发
 
@@ -96,22 +115,26 @@ pnpm release:zip
 zip 输出位置：
 
 ```txt
-.output/design-md-token-exporter-0.1.0-chrome-mv3.zip
+.output/design-md-token-exporter-0.1.1-chrome-mv3.zip
 ```
 
 上传 Chrome Web Store 前，确认 zip 根目录直接包含 `manifest.json`：
 
 ```bash
-unzip -l .output/design-md-token-exporter-0.1.0-chrome-mv3.zip | head
+unzip -l .output/design-md-token-exporter-0.1.1-chrome-mv3.zip | head
 ```
 
 ## Chrome Web Store 状态
 
-Chrome Web Store 上架材料正在 [docs/publish](docs/publish) 下准备。
+Design.md Token Exporter 已发布到 [Chrome Web Store](https://chromewebstore.google.com/detail/designmd-token-exporter/jkeicmodgpdpakcoafcppfhdbeppgnaj)。
 
 ## 仓库说明
 
 `references/old-prototype` 是旧原型参考目录。旧原型源码默认不进入公开仓库，除非后续明确完成授权、隐私和 license 审查。
+
+## 免责声明
+
+示例网站截图仅用于展示设计 token 提取场景。本项目与 Apple、Airbnb、NVIDIA、Stripe、Google 或 Stitch 不存在从属关系，也未获得这些公司或产品的背书。
 
 ## 许可证
 

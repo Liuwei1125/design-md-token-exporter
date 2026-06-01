@@ -7,15 +7,34 @@
 </p>
 
 <p align="center">
-  <img alt="Version 0.1.0" src="https://img.shields.io/badge/version-0.1.0-dc2626?style=for-the-badge">
+  <img alt="Version 0.1.1" src="https://img.shields.io/badge/version-0.1.1-dc2626?style=for-the-badge">
   <img alt="Tests passing" src="https://img.shields.io/badge/tests-passing-22c55e?style=for-the-badge">
   <img alt="License MIT" src="https://img.shields.io/badge/license-MIT-0ea5e9?style=for-the-badge">
   <img alt="Manifest V3" src="https://img.shields.io/badge/manifest-MV3-475569?style=for-the-badge">
+  <a href="https://chromewebstore.google.com/detail/designmd-token-exporter/jkeicmodgpdpakcoafcppfhdbeppgnaj">
+    <img alt="Chrome Web Store" src="https://img.shields.io/badge/Chrome%20Web%20Store-published-2563eb?style=for-the-badge">
+  </a>
 </p>
+
+<p align="center">
+  <a href="https://chromewebstore.google.com/detail/designmd-token-exporter/jkeicmodgpdpakcoafcppfhdbeppgnaj"><strong>Install from Chrome Web Store</strong></a>
+</p>
+
+![Design.md Token Exporter](store-assets/chrome-store/promo/marquee-1400x560.png)
 
 Local-first Chrome extension for extracting design tokens from the current webpage and exporting AI-friendly design artifacts.
 
 Design.md Token Exporter analyzes the active tab only after an explicit user action, keeps extraction data in the browser, and generates `DESIGN.md`, CSS variables, Tailwind config snippets, and `tokens.json` for frontend implementation workflows.
+
+## Screenshots
+
+![Analyze current page](store-assets/chrome-store/screenshots/01-analyze-current-page.png)
+
+![Overview workspace](store-assets/chrome-store/screenshots/02-overview-workbench.png)
+
+![Token palette](store-assets/chrome-store/screenshots/03-token-palette.png)
+
+![Export DESIGN.md](store-assets/chrome-store/screenshots/04-export-design-md.png)
 
 ## Features
 
@@ -49,7 +68,7 @@ Requested Chrome permissions:
 - `storage`: store the last local extraction result, user corrections, and workspace preferences.
 - `sidePanel`: provide the main review and export workspace.
 
-See [privacy statement](docs/publish/privacy-statement.md) for the submission draft.
+See the published [privacy statement](docs/publish/privacy-statement.md).
 
 ## Development
 
@@ -95,22 +114,26 @@ pnpm release:zip
 The zip is written to:
 
 ```txt
-.output/design-md-token-exporter-0.1.0-chrome-mv3.zip
+.output/design-md-token-exporter-0.1.1-chrome-mv3.zip
 ```
 
 Before uploading to the Chrome Web Store, verify the zip contains `manifest.json` at the root:
 
 ```bash
-unzip -l .output/design-md-token-exporter-0.1.0-chrome-mv3.zip | head
+unzip -l .output/design-md-token-exporter-0.1.1-chrome-mv3.zip | head
 ```
 
 ## Chrome Web Store Status
 
-Chrome Web Store listing materials are being prepared under [docs/publish](docs/publish).
+Design.md Token Exporter is published on the [Chrome Web Store](https://chromewebstore.google.com/detail/designmd-token-exporter/jkeicmodgpdpakcoafcppfhdbeppgnaj).
 
 ## Repository Notes
 
 The old prototype under `references/old-prototype` is reference-only. Its source is ignored for public repository publishing unless explicitly reviewed for licensing and privacy.
+
+## Disclaimer
+
+Example website screenshots are used only to demonstrate design-token extraction contexts. This project is not affiliated with or endorsed by Apple, Airbnb, NVIDIA, Stripe, Google, or Stitch.
 
 ## License
 
